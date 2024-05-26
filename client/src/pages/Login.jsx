@@ -1,41 +1,52 @@
 import { useNavigate } from "react-router-dom";
 import PageNav from "../components/PageNav";
-import { useAuth } from "../contexts/FakeAuthContext";
 import styles from "./Login.module.css";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Button from "../components/Button";
+import axios from "axios";
+import toast from "react-hot-toast";
+import { useSetRecoilState } from "recoil";
+import userAtom from "../atoms/userAtom";
 
 export default function Login() {
   // PRE-FILL FOR DEV PURPOSES
-  const [email, setEmail] = useState("jack@example.com");
+  const [username, setUsername] = useState("jack@example.com");
   const [password, setPassword] = useState("qwerty");
-  const { login, isAuthenticated } = useAuth();
+  const setUser = useSetRecoilState(userAtom);
 
-  function handleSubmit(e) {
-    e.preventDefault();
-
-    if (email && password) login(email, password);
-  }
-
+  const url = import.meta.env.VITE_APP_URL;
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (isAuthenticated) {
+  async function handleSubmit(e) {
+    e.preventDefault();
+
+    try {
+      const { data } = await axios.post(url + "/users/login", {
+        username,
+        password,
+      });
+      localStorage.setItem("worldwise-user", JSON.stringify(data.user));
+      setUser(data.user);
+      toast.success(data.message);
       navigate("/app", { replace: true });
+    } catch (error) {
+      if (error.response.data.error) {
+        toast.error(error.response.data.error);
+      }
     }
-  }, [isAuthenticated, navigate]);
+  }
 
   return (
     <main className={styles.login}>
       <PageNav />
       <form className={styles.form} onSubmit={handleSubmit}>
         <div className={styles.row}>
-          <label htmlFor="email">Email address</label>
+          <label htmlFor="email">Username</label>
           <input
-            type="email"
-            id="email"
-            onChange={(e) => setEmail(e.target.value)}
-            value={email}
+            type="username"
+            id="username"
+            onChange={(e) => setUsername(e.target.value)}
+            value={username}
           />
         </div>
 

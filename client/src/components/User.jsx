@@ -1,29 +1,25 @@
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../contexts/FakeAuthContext";
 import styles from "./User.module.css";
+import axios from "axios";
+import { useRecoilValue } from "recoil";
+import userAtom from "../atoms/userAtom";
 
-// const FAKE_USER = {
-//   name: "Jack",
-//   email: "jack@example.com",
-//   password: "qwerty",
-//   avatar: "https://i.pravatar.cc/100?u=zz",
-// };
-
+const url = import.meta.env.VITE_APP_URL;
 function User() {
-  const { user, logout } = useAuth();
+  const user = useRecoilValue(userAtom);
   const navigate = useNavigate();
-  // const user = FAKE_USER;
 
-  function handleClick() {
-    logout();
+  async function handleLogout() {
+    await axios.post(`${url}/users/logout`);
+    localStorage.removeItem("worldwise-user");
     navigate("/");
   }
 
   return (
     <div className={styles.user}>
-      <img src={user.avatar} alt={user.name} />
+      {/* <img src={user?.avatar} alt={user.name} /> */}
       <span>Welcome, {user.name}</span>
-      <button onClick={handleClick}>Logout</button>
+      <button onClick={handleLogout}>Logout</button>
     </div>
   );
 }
