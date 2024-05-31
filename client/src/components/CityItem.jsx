@@ -1,6 +1,10 @@
+import axios from "axios";
 import { useCities } from "../contexts/CitiesContext";
 import styles from "./CityItem.module.css";
 import { Link } from "react-router-dom";
+import { useRecoilState } from "recoil";
+import cityAtom from "../atoms/cityAtom";
+import toast from "react-hot-toast";
 
 const formatDate = (date) =>
   new Intl.DateTimeFormat("en", {
@@ -12,12 +16,25 @@ const formatDate = (date) =>
 
 function CityItem({ city }) {
   const { currentCity, deleteCity } = useCities();
-  const { cityName, emoji, date, id, position } = city;
-
-  function handleDeleteCity(e) {
+  const [cities, setCities] = useRecoilState(cityAtom);
+  const { cityName, emoji, createdAt: date, _id: id, position } = city;
+  const token = JSON.parse(localStorage.getItem("worldwise-user")).token;
+  async function handleDeleteCity(e) {
     e.preventDefault();
-
-    deleteCity(id);
+    try {
+      const { data } = await axios.delete(
+        `${import.meta.env.VITE_APP_URL}/places/delete/${id}`,
+        {
+          headers: {
+            Authorization: "Bearer " + token,
+          },
+        }
+      );
+      setCities(cities.filter((city) => city._id !== id));
+      toast.success(data.message);
+    } catch (error) {
+      console.error(error);
+    }
   }
   return (
     <li>
@@ -25,7 +42,7 @@ function CityItem({ city }) {
         className={`${styles.cityItem} ${
           id === currentCity.id ? styles["cityItem--active"] : ""
         }`}
-        to={`${id}?lat=${position.lat}&lng=${position.lng}`}
+        to={`${id}?lat=${position[0].lat}&lng=${position[0].lng}`}
       >
         <span className={styles.emoji}>{emoji}</span>
         <h3 className={styles.name}>{cityName}</h3>

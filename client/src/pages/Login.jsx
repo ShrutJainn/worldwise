@@ -25,7 +25,8 @@ export default function Login() {
         username,
         password,
       });
-      localStorage.setItem("worldwise-user", JSON.stringify(data.user));
+      const { user, token } = data;
+      localStorage.setItem("worldwise-user", JSON.stringify({ user, token }));
       setUser(data.user);
       toast.success(data.message);
       navigate("/app", { replace: true });

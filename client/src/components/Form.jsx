@@ -14,6 +14,8 @@ import { useUrlPosition } from "../hooks/useUrlPosition";
 import Message from "./Message";
 import Spinner from "./Spinner";
 import { useCities } from "../contexts/CitiesContext";
+import axios from "axios";
+import toast from "react-hot-toast";
 
 export function convertToEmoji(countryCode) {
   const codePoints = countryCode
@@ -74,8 +76,20 @@ function Form() {
       position: { lat, lng },
     };
 
-    await createCity(newCity);
-    navigate("/app/cities");
+    const token = JSON.parse(localStorage.getItem("worldwise-user")).token;
+
+    const { data } = await axios.post(
+      `${import.meta.env.VITE_APP_URL}/places/create`,
+      newCity,
+      {
+        headers: {
+          Authorization: "Bearer " + token,
+        },
+      }
+    );
+    if (data.error) return toast.error(data.error);
+    toast.success(data.message);
+    navigate("/app");
   }
 
   if (isLoadingGeocoding) return <Spinner />;

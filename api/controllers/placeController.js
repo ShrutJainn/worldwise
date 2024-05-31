@@ -1,5 +1,7 @@
+import mongoose from "mongoose";
 import Place from "../models/placeModel.js";
 import User from "../models/userModel.js";
+import { ObjectId } from "mongodb";
 
 export async function createPlace(req, res) {
   try {
@@ -22,7 +24,9 @@ export async function createPlace(req, res) {
     });
     newPlace.save();
 
-    res.status(200).json({ message: "Place saved successfully", newPlace });
+    return res
+      .status(200)
+      .json({ message: "Place saved successfully", newPlace });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -31,7 +35,8 @@ export async function createPlace(req, res) {
 export async function deletePlace(req, res) {
   try {
     const { placeId } = req.params;
-    const place = await Place.findById(placeId);
+    const id = ObjectId.createFromHexString(placeId);
+    const place = await Place.findOne({ _id: id });
     if (!place) return res.status(400).json({ error: "Place not found" });
 
     if (place.owner.toString() !== req.user._id.toString()) {
@@ -57,6 +62,21 @@ export async function getPlaces(req, res) {
     const places = await Place.find({ owner: { $in: user._id } });
     res.status(200).json(places);
   } catch (err) {
+    res.status(500).json({ error: err.message });
+    console.log(err.message);
+  }
+}
+
+export async function getPlace(req, res) {
+  try {
+    const { placeId } = req.params;
+    const id = ObjectId.createFromHexString(placeId);
+
+    const place = await Place.findById(id);
+    if (!place) return res.status(400).json({ error: "Place not found" });
+
+    return res.status(200).json({ place });
+  } catch (error) {
     res.status(500).json({ error: err.message });
     console.log(err.message);
   }

@@ -1,6 +1,6 @@
 import User from "../models/userModel.js";
 import bcrypt from "bcryptjs";
-import { generateTokenAndSetCookie } from "../utils/helpers.js";
+import { generateToken } from "../utils/helpers.js";
 
 export async function getUser(req, res) {
   try {
@@ -34,7 +34,7 @@ export async function signpUser(req, res) {
     newUser.save();
 
     if (newUser) {
-      generateTokenAndSetCookie(newUser._id, res);
+      generateToken(newUser._id, res);
       res
         .status(200)
         .json({ message: "User created successfully", user: newUser });
@@ -59,8 +59,10 @@ export async function loginUser(req, res) {
     if (!user || !isCorrectPassword)
       return res.status(400).json({ error: "Invalid username or password" });
 
-    generateTokenAndSetCookie(user._id, res);
-    res.status(200).json({ message: "User logged in successfully", user });
+    const token = generateToken(user._id, res);
+    res
+      .status(200)
+      .json({ message: "User logged in successfully", user, token });
   } catch (err) {
     res.status(500).json({ error: err.message });
     console.log(err.message);

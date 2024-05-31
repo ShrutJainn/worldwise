@@ -1,9 +1,9 @@
 import { useParams } from "react-router-dom";
 import styles from "./City.module.css";
-import { useCities } from "../contexts/CitiesContext";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Spinner from "./Spinner";
 import BackButton from "./BackButton";
+import axios from "axios";
 
 const formatDate = (date) =>
   new Intl.DateTimeFormat("en", {
@@ -15,14 +15,34 @@ const formatDate = (date) =>
 
 function City() {
   const { id } = useParams();
-  const { currentCity, getCity, isLoading } = useCities();
+  const [city, setCity] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
+  const token = JSON.parse(localStorage.getItem("worldwise-user")).token;
 
   useEffect(() => {
-    getCity(id);
-  }, [id, getCity]);
+    async function fetchPlace() {
+      setIsLoading(true);
+      try {
+        const { data } = await axios.get(
+          `${import.meta.env.VITE_APP_URL}/places/${id}`,
+          {
+            headers: {
+              Authorization: "Bearer " + token,
+            },
+          }
+        );
+        setCity(data.place);
+      } catch (error) {
+        console.log(error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchPlace();
+  }, [id, token]);
   // const [searchParams, setSearchParams] = useSearchParams();
 
-  const { cityName, emoji, date, notes } = currentCity;
+  const { cityName, emoji, date, notes } = city;
 
   if (isLoading) return <Spinner />;
 
